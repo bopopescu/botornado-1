@@ -214,5 +214,30 @@ class AsyncBucket(Bucket):
         
     def delete(self, headers=None, callback=None):
         return self.connection.delete_bucket(self.name, headers=headers, callback=callback)
+        
+    def set_canned_acl(self, acl_str, key_name='', headers=None,
+                       version_id=None, callback=None):
+        assert acl_str in CannedACLStrings
+
+        if headers:
+            headers[self.connection.provider.acl_header] = acl_str
+        else:
+            headers={self.connection.provider.acl_header: acl_str}
+
+        query_args = 'acl'
+        if version_id:
+            query_args += '&versionId=%s' % version_id
+            
+        provider = self.connection.provider
+        def _response(response):
+            body = response.read()
+            if response.status != 200:
+                raise provider.storage_response_error(
+                    response.status, response.reason, body)
+            if callable(callback):
+                callback(True)
+        self.connection.make_request('PUT', self.name, key_name,
+                                     headers=headers,
+                                     query_args=query_args, callback=_response)
 
 # vim:set ft=python sw=4 :

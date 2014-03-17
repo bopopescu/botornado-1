@@ -895,5 +895,8 @@ class AsyncKey(Key):
         self.get_contents_to_file(fp, headers, cb, num_cb, torrent=torrent,
                                   version_id=version_id,
                                   response_headers=response_headers, callback=got_contents_as_string)
+                                  
+    def make_public(self, headers=None, callback=None):
+        self.bucket.set_canned_acl('public-read', self.name, headers, callback=callback)
 
 # vim:set ft=python sw=4 :
